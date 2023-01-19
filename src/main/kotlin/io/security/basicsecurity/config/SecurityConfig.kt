@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.web.SecurityFilterChain
 
@@ -18,6 +19,7 @@ class SecurityConfig(
         http.authorizeRequests {
             it.anyRequest().authenticated()
         }
+
         http.formLogin {
             it.defaultSuccessUrl("/")
             it.failureUrl("/login")
@@ -63,6 +65,9 @@ class SecurityConfig(
                 .maxSessionsPreventsLogin(true)
                 .expiredUrl("/expired")
             it.invalidSessionUrl("/invalid")
+            it.sessionFixation().changeSessionId() // 기본값
+            // .none(), .migrateSession(), .newSession()
+            it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 세션이 없는 인증방식(jwt 등)을 이용하려면 STATELESS 속성 사용
         }
 
         return http.build()
