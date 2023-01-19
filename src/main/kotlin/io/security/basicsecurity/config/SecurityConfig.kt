@@ -31,6 +31,19 @@ class SecurityConfig {
             it.permitAll()
         }
 
+        http.logout {
+            it.logoutUrl("/logout")
+            it.logoutSuccessUrl("/login")
+            it.deleteCookies("JSESSIONID") // 로그아웃 후 쿠키 삭제
+            it.addLogoutHandler { request, response, authentication ->
+                val session = request.session
+                session.invalidate()
+            }
+            it.logoutSuccessHandler { request, response, authentication ->
+                response.sendRedirect("/login")
+            }
+        }
+
         return http.build()
     }
 
