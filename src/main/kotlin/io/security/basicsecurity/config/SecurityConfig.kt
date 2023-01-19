@@ -19,7 +19,6 @@ class SecurityConfig(
             it.anyRequest().authenticated()
         }
         http.formLogin {
-            it.loginPage("/login")
             it.defaultSuccessUrl("/")
             it.failureUrl("/login")
             it.loginProcessingUrl("/login_proc")
@@ -54,6 +53,16 @@ class SecurityConfig(
             it.tokenValiditySeconds(3600) // default 14일
             // it.alwaysRemember(true) // 로그인시 무조건 리멤버미 기능 활성화
             it.userDetailsService(userDetailsService) // 내부적으로 재인증 처리를 위해서 필요함
+        }
+
+        http.sessionManagement {
+            // 세션 제어 전략
+            // 1. 이전 사용자의 세션을 만료시킴 - maxSessionsPreventsLogin(true)
+            // 2. 현재 사용자의 인증을 실패시킴 - maxSessionsPreventsLogin(false)
+            it.maximumSessions(1) // -1: 로그인 세션 무제한 허용
+                .maxSessionsPreventsLogin(true)
+                .expiredUrl("/expired")
+            it.invalidSessionUrl("/invalid")
         }
 
         return http.build()
