@@ -6,8 +6,24 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class SecurityController {
 
-    @GetMapping("login-page")
+    @GetMapping("/login-page")
     fun loginPage() : String {
         return "loginPage"
     }
+
+    @GetMapping("/user")
+    fun user() : String {
+        return "user"
+    }
+
+    @GetMapping("/admin/pay")
+    fun adminPay() : String {
+        return "adminPay"
+    }
+
+    @GetMapping("/admin/**")
+    fun admin() : String {
+        return "admin"
+    }
+
 }
