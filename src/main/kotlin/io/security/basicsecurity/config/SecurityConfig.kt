@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache
 
 @Configuration
 @EnableWebSecurity
@@ -41,6 +42,7 @@ class SecurityConfig(
 
         http.authorizeRequests {
             // 구체적인 경로가 먼저 오고 그것보다 큰 범위의 경로가 뒤에 오도록 해야 한다
+            it.antMatchers("/login").permitAll()
             it.antMatchers("/user").hasRole("USER")
             it.antMatchers("/admin/pay").hasRole("ADMIN")
             it.antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')") // access 사용하면 SpEL 표현식 사용 가능
@@ -54,6 +56,11 @@ class SecurityConfig(
             it.successHandler { request, response, authentication ->
                 println("authentication: ${authentication.name}")
                 response.sendRedirect("/")
+
+                val requestCache = HttpSessionRequestCache()
+                val savedRequest = requestCache.getRequest(request, response)
+                val redirectUrl = savedRequest.redirectUrl
+                response.sendRedirect(redirectUrl)
             }
             it.failureHandler { request, response, exception ->
                 println("exception: ${exception.message}")
@@ -61,19 +68,29 @@ class SecurityConfig(
             }
             it.permitAll()
         }
-//
-//        http.logout {
-//            it.logoutUrl("/logout")
-//            it.logoutSuccessUrl("/login")
-//            it.deleteCookies("JSESSIONID") // 로그아웃 후 쿠키 삭제
-//            it.addLogoutHandler { request, response, authentication ->
-//                val session = request.session
-//                session.invalidate()
-//            }
-//            it.logoutSuccessHandler { request, response, authentication ->
+
+        http.exceptionHandling {
+            // authenticationEntryPoint 구현시 formLogin 기본 /login 경로가 동작하지 않음
+//            it.authenticationEntryPoint { request, response, authException ->
 //                response.sendRedirect("/login")
 //            }
-//        }
+            it.accessDeniedHandler { request, response, accessDeniedException ->
+                response.sendRedirect("/denied")
+            }
+        }
+
+        http.logout {
+            it.logoutUrl("/logout")
+            it.logoutSuccessUrl("/login")
+            it.deleteCookies("JSESSIONID") // 로그아웃 후 쿠키 삭제
+            it.addLogoutHandler { request, response, authentication ->
+                val session = request.session
+                session.invalidate()
+            }
+            it.logoutSuccessHandler { request, response, authentication ->
+                response.sendRedirect("/login")
+            }
+        }
 //
 //        //세션이 만료되고 웹브라우저가 종료된 후에도 어플리케이션이 사용자를 기억하는 기능
 //        http.rememberMe {
